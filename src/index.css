@@ -1,0 +1,20 @@
+@import "tailwindcss";
+
+@font-face {
+  font-family: 'Arial';
+  src: url('./assets/font/arial/arial.TTF') format('truetype');
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  --font-arial: 'Arial', system-ui, sans-serif;
+}
+
+h1, h2, h3 {
+  color: #271a38;
+}
+
+.font-arial {
+  font-family: var(--font-arial);
+}
