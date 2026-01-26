@@ -41,6 +41,9 @@ export default function ReactTuto() {
             <div className="flex-1 mx-auto max-w-200">
                 <div className={`px-8 py-4 ${ isPartie == 1 ? "" : "hidden"}`}>
                     <h1>Partie 1</h1>
+                    <video controls>
+                        <source src="/vid/partie2/Tuto 2 screencast.mp4" type="video/mp4" />
+                    </video>
                 </div>
                 <div className={`px-8 py-4 ${ isPartie == 2 ? "" : "hidden"}`}>
                     <h1>Partie 2</h1>
@@ -109,8 +112,8 @@ export default function ReactTuto() {
                     <h4>L'enveloppe principale (Browser Router)</h4>
                     <p>Pour que la navigation fonctionne, nous devons envelopper toute notre application dans un composant spécial qui va "surveiller" l'URL du navigateur.</p>
                     <p>Ouvrez votre fichier principal (souvent <code>main.jsx</code> ou <code>index.js</code>) :</p>
-                    <img src="/public/img/screenshot/react/partie4/code_browserrouter.png" alt="" />
-                    <img src="/public/img/screenshot/react/partie4/schema_browserrouter.png" alt="" />
+                    <img src="/img/screenshot/react/partie4/code_browserrouter.png" alt="" />
+                    <img src="/img/screenshot/react/partie4/schema_browserrouter.png" alt="" />
                     <h3>2. Définir vos Routes</h3>
                     <p>Maintenant, allons dans <code>App.jsx</code>. C'est ici que nous allons définir les règles du jeu : "Si l'URL est <code>/contact</code>, alors affiche le composant <code>{`<Contact />`}</code>".</p>
                     <p>Nous utilisons deux composants clés :</p>
@@ -118,25 +121,25 @@ export default function ReactTuto() {
                         <li>1. <code>{`<Routes>`}</code>: Le conteneur qui regroupe toutes vos pages possibles.</li>
                         <li>2. <code>{`<Route>`}</code>: La définition d'une page spécifique</li>
                     </ul>
-                    <img src="/public/img/screenshot/react/partie4/code_routes.png" alt="" />
+                    <img src="/img/screenshot/react/partie4/code_routes.png" alt="" />
                     <h3>3. Créer des liens de navigation</h3>
                     <p>C'est ici que 90% des débutants font une erreur.</p>
                     <p>En HTML classique, pour changer de page, vous utilisez la balise <code>{`<a>`}</code>. <strong>En React, il est interdit d'utiliser<code>{`<a href="...">`}</code>pour la navigation interne.</strong></p>
                     <p><strong>Pourquoi ?</strong> La balise <code>{`<a>`}</code> force le navigateur à recharger toute la page (et donc à re-télécharger tout le Javascript). Cela tue l'intérêt de la SPA et réinitialise tous vos  <code>{`useState`}</code> à zéro !</p>
                     <p>À la place, on utilise le composant <code>{`<Link>`}</code>.</p>
-                    <img src="/public/img/screenshot/react/partie4/code_link.png" alt="" />
-                    <img src="/public/img/screenshot/react/partie4/schema_link.png" alt="" />
+                    <img src="/img/screenshot/react/partie4/code_link.png" alt="" />
+                    <img src="/img/screenshot/react/partie4/schema_link.png" alt="" />
                     <h3>4. Les paramètres d'URL (le Hook useParams)</h3>
                     <p>Souvent, vous voudrez afficher une page de détail, comme un profil utilisateur ou un article de blog. L'URL ressemblera à <code>/profil/42</code> ou <code>/profil/99</code>.</p>
                     <p>On appelle cela une <strong>route dynamique</strong>.</p>
                     <ul>
                         <li>
                             <p>1.<strong>Dans la Route :</strong> On utilise les deux-points <code>:</code> pour définir une variable.</p>
-                            <img src="/public/img/screenshot/react/partie4/code_useparams_routes.png" alt="" />
+                            <img src="/img/screenshot/react/partie4/code_useparams_routes.png" alt="" />
                         </li>
                         <li>
                             <p>2. <strong>Dans le Composant :</strong> On récupère cette variable grâce au hook <code>useParams</code>.</p>
-                            <img src="/public/img/screenshot/react/partie4/code_useparams_composant.png" alt="" />
+                            <img src="/img/screenshot/react/partie4/code_useparams_composant.png" alt="" />
                         </li>
                     </ul>
                     <h4>Résumé du chapitre</h4>
@@ -169,21 +172,21 @@ export default function ReactTuto() {
                     <h3>Étape 1 : Préparer les données</h3>
                     <p>Dans un vrai projet, on récupérerait ces données depuis une base de données. Pour simplifier, nous allons créer un fichier local.</p>
                     <p>Créez un fichier <code>citation.js</code> à côté de votre <code>App.jsx</code> et recopiez-y ceci: </p>
-                    <img src="/public/img/screenshot/react/partie5/code_citations.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/code_citations.png" alt="" />
                     <h3>Étape 2 : Créer la page "Générateur"</h3>
                     <p>C'est le cœur de notre application.</p>
                     <p>Créez un composant <code>Generateur.jsx</code>. Nous allons utiliser <code>useState</code> pour stocker l'index de la citation actuelle (par exemple : citation n°0, n°1, etc.).</p>
-                    <img src="/public/img/screenshot/react/partie5/code_generateur.png" alt="" />
-                    <img src="/public/img/screenshot/react/partie5/schema_maquette_generateur.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/code_generateur.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/schema_maquette_generateur.png" alt="" />
                     <h3>Étape 3 : Créer la page "À Propos"</h3>
                     <p>Pour justifier l'utilisation du Router, créons une deuxième page très simple. Créez un fichier <code>APropos.jsx</code> :</p>
-                    <img src="/public/img/screenshot/react/partie5/code_apropos.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/code_apropos.png" alt="" />
                     <h3>Étape 4 : Assembler le tout avec le Router</h3>
                     <p>Maintenant, nous devons configurer la navigation dans <code>App.jsx</code>. Nous allons aussi ajouter une petite barre de menu (Navbar) qui restera toujours visible en haut.</p>
-                    <img src="/public/img/screenshot/react/partie5/code_app.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/code_app.png" alt="" />
                     <h3>Étape 5 : Exemple de CSS</h3>
                     <p>Pour que ce soit joli, voici un petit bout de CSS à mettre dans votre <code>index.css</code> (React l'applique automatiquement) :</p>
-                    <img src="/public/img/screenshot/react/partie5/code_exemplecss.png" alt="" />
+                    <img src="/img/screenshot/react/partie5/code_exemplecss.png" alt="" />
 
                     <h3>Conclusion du cours</h3>
                     <h4>MISSION ACCOMPLIE !</h4>
