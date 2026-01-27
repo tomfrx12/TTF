@@ -1,6 +1,7 @@
 import { useState } from "react";
 
 import { X } from 'lucide-react';
+import Text from "../components/texte";
 
 export default function ReactTuto() {
     var [isOpen, setIsOpen] = useState(true);
@@ -41,6 +42,7 @@ export default function ReactTuto() {
             <div id="content" className="flex-1 mx-auto max-w-200">
                 <div className={`px-8 py-4 ${ isPartie == 1 ? "" : "hidden"}`}>
                     <span className="text-4xl font-bold">Partie 1</span>
+                    <Text name="h1"></Text>
                     <h1>S'initier à React.js avec un screencast</h1>
                     <video controls>
                         <source src="/vid/partie1/Tuto-1_screencast.mp4" type="video/mp4" />
