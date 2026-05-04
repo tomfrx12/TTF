@@ -48,7 +48,12 @@ export default function ReactTuto() {
                         <source src="/vid/partie1/Tuto-1_screencast.mp4" type="video/mp4" />
                     </video>
 
-                    <Code></Code>
+                    <Code>
+                        import { useState } from 'react';
+
+                        // Syntaxe : const [variable, fonctionDeModification] = useState(valeurInitiale);
+                        const [compteur, setCompteur] = useState(0);
+                    </Code>
 
                 </div>
                 <div className={`px-8 py-4 ${ isPartie == 2 ? "" : "hidden"}`}>
