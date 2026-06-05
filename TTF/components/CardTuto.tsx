@@ -1,9 +1,20 @@
-import { Link } from "react-router";
+import React from "react";
+// import Image from "next/image";
+import Link from "next/link";
 
-export default function Cardtuto({src, alt, categorie, name, description}) {
+interface CardTutoProps {
+    src: string;
+    alt: string;
+    categorie: string;
+    name: string;
+    description: string;
+    href: string;
+};
+
+export default function CardTuto({ src, alt, categorie, name, description, href }: CardTutoProps) {
 
     return (
-        <Link to="/tuto-react">
+        <Link href={href}>
             <div className="my-4 p-4 flex gap-4 shadow-sm h-45 rounded-lg cursor-pointer hover:shadow-md transition-all transform">
                 <img className="w-67.5 h-37.5" src={src} alt={alt} />
                 <div className="flex flex-col justify-center gap-2">
