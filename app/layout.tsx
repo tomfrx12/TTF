@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/header";
+import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 
@@ -14,7 +14,7 @@ export default function RootLayout({ children }: Readonly <{ children: React.Rea
       <body>
         <AuthProvider>
           <Header />
-          <main className="min-h-[95vh]">{children}</main>
+          {children}
           <Footer />
         </AuthProvider>
       </body>

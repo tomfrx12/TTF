@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { IoMdPerson } from "react-icons/io";
 import { useAuth } from "../context/AuthContext";
+import Text from "./Text";
 
 export default function Header() {
     const { isLog, Login, Logout } = useAuth();
@@ -12,8 +13,8 @@ export default function Header() {
             <div className="flex gap-8 items-center">
                 <Image src="/react.jpg" width={100} height={100} alt="Image Logo TTF" className="flex py-2"/>
                 <div className="flex gap-8 justify-center">
-                    <a href="" className="text-(--color-primary)">Tutos</a>
-                    <a href="" className="text-(--color-black-break)">Admin ?</a>
+                    <a href="" className="text-(--color-primary)"><Text name="p">Tutoriels</Text></a>
+                    <a href=""><Text name="p">Admin ?</Text></a>
                 </div>
             </div>
             <div className="flex gap-4">
@@ -25,7 +26,9 @@ export default function Header() {
                     className="cursor-pointer bg-(--color-secondary) text-(--color-white-break) p-2 px-3 rounded-md duration-400 hover:scale-102"
                     onClick={() => (isLog ? Logout() : Login())}
                 >
-                    {isLog ? "Se Déconnecter" : "Se Connecter"}
+                    <Text name="p">
+                        {isLog ? "Se Déconnecter" : "Se Connecter"}
+                    </Text>
                 </button>
             </div>
         </header>

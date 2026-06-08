@@ -2,15 +2,9 @@
 
 import React, { createContext, useState, useContext, ReactNode } from "react";
 
-type Identifiant = {
-  email?: string;
-  password?: string;
-  token?: string;
-};
-
 type AuthContexteType = {
   isLog: boolean;
-  Login: (identifiant?: Identifiant) => Promise<boolean>;
+  Login: () => Promise<boolean>;
   Logout: () => void;
 };
 
@@ -19,10 +13,10 @@ const AuthContexte = createContext<AuthContexteType | undefined>(undefined);
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLog, setIsLog] = useState<boolean>(false);
 
-  const Login = async (identifiant?: Identifiant): Promise<boolean> => {
+    const Login = async (): Promise<boolean> => {
       setIsLog(true);
       return true;
-  };
+    };
 
   const Logout = () => {
     setIsLog(false);
