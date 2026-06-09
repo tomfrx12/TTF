@@ -7,3 +7,14 @@
 }
 
 @import "tailwindcss";
+
+@layer utilities {
+  @keyframes title-color {
+    0%, 100% { color: var(--color-primary); } 
+    50% { color: var(--color-secondary); }      
+  }
+
+  .animate-title-connexion {
+    animation: title-color 6s ease-in-out infinite;
+  }
+}
