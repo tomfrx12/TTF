@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Allow: /tutoriels
+Allow: /charte-editoriale
+Allow: /mentions-legales
+Disallow: /admin
+Disallow: /api/
+Disallow: /users/
+
+Sitemap: https://ttf.tom-fourneaux.fr/sitemap.xml

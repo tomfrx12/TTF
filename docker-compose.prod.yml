@@ -21,7 +21,7 @@ services:
       - "traefik.docker.network=web"
       - "traefik.http.routers.ttf.rule=Host(`ttf.tom-fourneaux.fr`)"
       - "traefik.http.routers.ttf.entrypoints=websecure"
-      - "traefik.http.routers.ttf.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.ttf.tls.certresolver=myresolver"
       - "traefik.http.services.ttf.loadbalancer.server.port=3000"
 
   postgres_db:
