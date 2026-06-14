@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   app:
     build:
@@ -16,12 +14,12 @@ services:
     volumes:
       - ttf_uploads:/app/public/uploads
     networks:
-      - internal
-      - traefik_network
+      - ttf_net
+      - web
     labels:
       - "traefik.enable=true"
-      # ⚠️  Remplace ttf.ton-domaine.fr par ton vrai domaine
-      - "traefik.http.routers.ttf.rule=Host(`ttf.ton-domaine.fr`)"
+      - "traefik.docker.network=web"
+      - "traefik.http.routers.ttf.rule=Host(`ttf.tom-fourneaux.fr`)"
       - "traefik.http.routers.ttf.entrypoints=websecure"
       - "traefik.http.routers.ttf.tls.certresolver=letsencrypt"
       - "traefik.http.services.ttf.loadbalancer.server.port=3000"
@@ -37,16 +35,13 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     networks:
-      - internal
-    # Pas de port exposé publiquement en prod
+      - ttf_net
 
 networks:
-  internal:
+  ttf_net:
     driver: bridge
-  traefik_network:
+  web:
     external: true
-    # ⚠️  Remplace par le vrai nom de ton réseau Traefik si différent
-    name: traefik_network
 
 volumes:
   postgres_data:
