@@ -7,7 +7,8 @@ import {
   jsonError,
   parseJsonBody,
 } from "@/lib/api";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/session";
 
 async function getPostId(params: Promise<{ postId: string }> | { postId: string }) {
   const resolvedParams = await Promise.resolve(params);
@@ -52,6 +53,8 @@ export async function GET(_request: Request, context: { params: Promise<{ postId
 
 export async function PATCH(request: Request, context: { params: Promise<{ postId: string }> | { postId: string } }) {
   try {
+    await requireAdmin();
+
     const postId = await getPostId(context.params);
     const body = await parseJsonBody(request);
     const data: {
@@ -116,12 +119,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ postI
 
     return NextResponse.json(post);
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ postId: string }> | { postId: string } }) {
   try {
+    await requireAdmin();
+
     const postId = await getPostId(context.params);
 
     await prisma.post.delete({
@@ -130,6 +137,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ pos
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }

@@ -10,13 +10,46 @@ export default function AuthPage() {
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [firstName, setFirstName] = useState("");
+  const [error, setError] = useState("");
   const { Login } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    await Login();
-    router.push(`/users/demo-user`);
+    setError("");
+
+    const user =
+      mode === "signin"
+        ? await Login(email, password)
+        : await fetch("/api/auth/signup", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              email,
+              password,
+              firstname: firstName,
+              name,
+            }),
+          }).then(async (response) => {
+            if (!response.ok) {
+              const payload = (await response.json().catch(() => null)) as { error?: string } | null;
+              setError(payload?.error ?? "Impossible de créer le compte");
+              return null;
+            }
+
+            return Login(email, password);
+          });
+
+    if (!user) {
+      if (mode === "signin") {
+        setError("Email ou mot de passe incorrect");
+      }
+      return;
+    }
+
+    router.push(`/users/${user.id}`);
   };
 
   return (
@@ -91,6 +124,10 @@ export default function AuthPage() {
           >
             {mode === "signin" ? "Se connecter" : "S'inscrire"}
           </button>
+
+          {error && (
+            <p className="text-sm text-red-600 text-center">{error}</p>
+          )}
         </form>
 
         <p className="text-center text-sm text-gray-500 mt-6">

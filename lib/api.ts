@@ -60,3 +60,11 @@ export function toSafeUser<T extends { password: string }>(user: T) {
   const { password, ...safeUser } = user;
   return safeUser;
 }
+
+export function validatePassword(password: string) {
+  if (password.length < 8) throw new Error("Le mot de passe doit faire au moins 8 caractères");
+}
+
+export function validateEmail(email: string) {
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw new Error("Email invalide");
+}

@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
-import { getRequiredString, jsonError, parseJsonBody, toSafeUser } from "@/lib/api";
-import { prisma } from "@/lib/prisma";
+import bcrypt from "bcryptjs";
+import { getRequiredString, jsonError, parseJsonBody, toSafeUser, validatePassword } from "@/lib/api";
+import { prisma } from "@/lib/db";
+import { requireAuth } from "@/lib/session";
 
 async function getUserId(params: Promise<{ userId: string }> | { userId: string }) {
   const resolvedParams = await Promise.resolve(params);
@@ -32,7 +34,14 @@ export async function GET(_request: Request, context: { params: Promise<{ userId
 
 export async function PATCH(request: Request, context: { params: Promise<{ userId: string }> | { userId: string } }) {
   try {
+    const session = await requireAuth();
     const userId = await getUserId(context.params);
+    const isAdmin = session.role.name.toLowerCase().includes("admin");
+
+    if (session.id !== userId && !isAdmin) {
+      return jsonError("Accès refusé", 403);
+    }
+
     const body = await parseJsonBody(request);
     const data: {
       email?: string;
@@ -55,16 +64,15 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
     }
 
     if (body.password !== undefined) {
-      data.password = getRequiredString(body.password, "password");
+      const raw = getRequiredString(body.password, "password");
+      validatePassword(raw);
+      data.password = await bcrypt.hash(raw, 12);
     }
 
     if (body.roleId !== undefined) {
+      if (!isAdmin) return jsonError("Accès refusé", 403);
       const roleId = Number(body.roleId);
-
-      if (!Number.isInteger(roleId)) {
-        throw new Error("roleId invalide");
-      }
-
+      if (!Number.isInteger(roleId)) throw new Error("roleId invalide");
       data.roleId = roleId;
     }
 
@@ -79,13 +87,21 @@ export async function PATCH(request: Request, context: { params: Promise<{ userI
 
     return NextResponse.json(toSafeUser(user));
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ userId: string }> | { userId: string } }) {
   try {
+    const session = await requireAuth();
     const userId = await getUserId(context.params);
+    const isAdmin = session.role.name.toLowerCase().includes("admin");
+
+    if (session.id !== userId && !isAdmin) {
+      return jsonError("Accès refusé", 403);
+    }
 
     await prisma.user.delete({
       where: { id: userId },
@@ -93,6 +109,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ use
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }

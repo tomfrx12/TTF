@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getRequiredString, jsonError, parseJsonBody, toSafeUser } from "@/lib/api";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
 
 export async function GET() {
   const users = await prisma.user.findMany({

@@ -7,7 +7,8 @@ import {
   jsonError,
   parseJsonBody,
 } from "@/lib/api";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/session";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -47,6 +48,8 @@ export async function GET(request: Request) {
 
 export async function POST(request: Request) {
   try {
+    await requireAdmin();
+
     const body = await parseJsonBody(request);
     const title = getRequiredString(body.title, "title");
     const slug = getRequiredString(body.slug, "slug");
@@ -85,6 +88,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json(post, { status: 201 });
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }

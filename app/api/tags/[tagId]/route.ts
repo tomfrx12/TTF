@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getRequiredString, jsonError, parseJsonBody } from "@/lib/api";
-import { prisma } from "@/lib/prisma";
+import { prisma } from "@/lib/db";
+import { requireAdmin } from "@/lib/session";
 
 async function getTagId(params: Promise<{ tagId: string }> | { tagId: string }) {
   const resolvedParams = await Promise.resolve(params);
@@ -42,6 +43,8 @@ export async function GET(_request: Request, context: { params: Promise<{ tagId:
 
 export async function PATCH(request: Request, context: { params: Promise<{ tagId: string }> | { tagId: string } }) {
   try {
+    await requireAdmin();
+
     const tagId = await getTagId(context.params);
     const body = await parseJsonBody(request);
     const name = getRequiredString(body.name, "name");
@@ -53,12 +56,16 @@ export async function PATCH(request: Request, context: { params: Promise<{ tagId
 
     return NextResponse.json(tag);
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ tagId: string }> | { tagId: string } }) {
   try {
+    await requireAdmin();
+
     const tagId = await getTagId(context.params);
 
     await prisma.tag.delete({
@@ -67,6 +74,8 @@ export async function DELETE(_request: Request, context: { params: Promise<{ tag
 
     return NextResponse.json({ deleted: true });
   } catch (error) {
-    return jsonError(error instanceof Error ? error.message : "Erreur serveur", 400);
+    const msg = error instanceof Error ? error.message : "Erreur serveur";
+    const status = msg === "Non authentifié" ? 401 : msg === "Accès refusé" ? 403 : 400;
+    return jsonError(msg, status);
   }
 }

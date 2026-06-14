@@ -20,6 +20,8 @@ export default function Footer() {
                         </Link>
                     </div>
                     <Text name="p" className="text-slate-400 text-xs mt-1">© 2026 TTF</Text>
+                    <Text name="p" className="text-slate-400 text-xs mt-1">Travail pédagogique sans objectifs commerciaux</Text>
+                    
                 </div>
                 <Link href="/charte-editoriale" className="text-(--color-white-break)/90 text-sm font-medium transition-all duration-300 hover:text-(--color-secondary) hover:scale-105">Charte Éditoriale</Link>
             </div>

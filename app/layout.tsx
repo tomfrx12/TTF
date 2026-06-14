@@ -5,7 +5,10 @@ import Footer from "@/components/Footer";
 import { AuthProvider } from "@/context/AuthContext";
 
 export const metadata: Metadata = {
-  title: "TTF: Tutos Tom Fourneaux"
+  title: "TTF: Tutos Tom Fourneaux",
+  icons: {
+    icon: "/favicon.png",
+  },
 };
 
 export default function RootLayout({ children }: Readonly <{ children: React.ReactNode; }>) {

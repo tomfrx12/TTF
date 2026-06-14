@@ -1,119 +1,201 @@
-"use client";
-
-import { useMemo, useState } from "react";
+import { Prisma } from "@prisma/client";
+import { prisma } from "@/lib/db";
 import Link from "next/link";
 import CardTuto from "@/components/CardTuto";
-import Text from "@/components/Text";
 
-type Tuto = {
-  id: string;
-  title: string;
-  description: string;
-  category: string;
-  createdAt: string;
+type SearchParams = {
+  q?: string | string[];
+  category?: string | string[];
+  sort?: string | string[];
 };
 
-const DEMO_TUTOS: Tuto[] = [
-  { id: "react-intro", title: "Introduction à React.js", description: "Apprenez les bases de React.js.", category: "React", createdAt: "2026-06-08" },
-  { id: "figma-101", title: "Premiers pas avec Figma", description: "Apprenez les bases de l'outil de design.", category: "Figma", createdAt: "2026-05-20" },
-  { id: "seo-basics", title: "Optimiser le SEO de votre site", description: "Guide pratique pour améliorer la visibilité.", category: "SEO", createdAt: "2026-04-12" },
-  { id: "node-api", title: "Créer une API avec Node.js", description: "Tutoriel rapide pour démarrer une API.", category: "Node", createdAt: "2026-06-01" },
-  { id: "react-hooks", title: "Comprendre les Hooks React", description: "useState, useEffect, useRef expliqués.", category: "React", createdAt: "2026-06-09" },
-];
+type PostWithRelations = Prisma.PostGetPayload<{
+  include: {
+    author: {
+      select: {
+        firstname: true;
+        name: true;
+      };
+    };
+    tags: true;
+  };
+}>;
 
-export default function Tutos() {
-  const [query, setQuery] = useState("");
-  const [category, setCategory] = useState("all");
-  const [sort, setSort] = useState<"none" | "recent" | "oldest">("recent");
+function firstValue(value: string | string[] | undefined) {
+  return Array.isArray(value) ? value[0] : value;
+}
 
-  const categories = useMemo(() => {
-    const set = new Set(DEMO_TUTOS.map((t) => t.category));
-    return ["all", ...Array.from(set)];
-  }, []);
+function formatDate(date: Date) {
+  return new Intl.DateTimeFormat("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  }).format(date);
+}
 
-  const filtered = useMemo(() => {
-    let list = DEMO_TUTOS.filter((t) => {
-      const q = query.trim().toLowerCase();
-      const matchesQuery = q === "" || t.title.toLowerCase().includes(q) || t.description.toLowerCase().includes(q);
-      const matchesCategory = category === "all" || t.category === category;
+function getCategoryLabel(post: PostWithRelations) {
+  return post.tags[0]?.name ?? "Tutoriel";
+}
+
+export default async function TutosPage({ searchParams }: { searchParams?: SearchParams }) {
+  const query = (firstValue(searchParams?.q) ?? "").trim().toLowerCase();
+  const category = firstValue(searchParams?.category) ?? "all";
+  const sort = firstValue(searchParams?.sort) ?? "recent";
+
+  const [posts, publishedCount, categoryRows, usersCount] = await Promise.all([
+    prisma.post.findMany({
+      where: { published: true },
+      include: {
+        author: {
+          select: {
+            firstname: true,
+            name: true,
+          },
+        },
+        tags: true,
+      },
+    }) as Promise<PostWithRelations[]>,
+    prisma.post.count({ where: { published: true } }),
+    prisma.tag.findMany({
+      select: { name: true },
+      orderBy: { name: "asc" },
+    }),
+    prisma.user.count(),
+  ]);
+
+  const categories = ["all", ...Array.from(new Set(categoryRows.map((tag) => tag.name)))];
+
+  const filteredPosts = posts
+    .filter((post) => {
+      const matchesQuery =
+        query === "" ||
+        post.title.toLowerCase().includes(query) ||
+        post.description.toLowerCase().includes(query) ||
+        post.tags.some((tag) => tag.name.toLowerCase().includes(query));
+
+      const matchesCategory =
+        category === "all" || post.tags.some((tag) => tag.name === category);
+
       return matchesQuery && matchesCategory;
+    })
+    .sort((a, b) => {
+      if (sort === "oldest") {
+        return a.createAt.getTime() - b.createAt.getTime();
+      }
+
+      return b.createAt.getTime() - a.createAt.getTime();
     });
 
-    if (sort === "recent") {
-      list = list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    } else if (sort === "oldest") {
-      list = list.sort((a, b) => (a.createdAt > b.createdAt ? 1 : -1));
-    }
-
-    return list;
-  }, [query, category, sort]);
+  const featuredPost = filteredPosts[0] ?? posts[0];
 
   return (
-    <main className="min-h-[95vh] max-w-360 flex flex-col justify-self-center px-4">
-      <section className="mb-6">
-        <Text name="h1" className="uppercase">Tuto à la Une :</Text>
-        <div className="flex flex-col md:flex-row bg-(--color-white-break) rounded-xl border border-slate-200 overflow-hidden p-6 gap-6 items-center shadow-sm">
-          <div className="w-full md:w-2/5 bg-[#f5ebe6] rounded-lg aspect-16/10 flex items-center justify-center p-4">
-            <span className="text-sm text-slate-400 font-medium">[ Illustration React ]</span>
-          </div>
-          <div className="flex flex-col flex-1">
-            <Text name="h2">Introduction à React.js</Text>
-            <Text name="p">Apprenez les bases de React.js pour construire des interfaces utilisateur dynamiques.</Text>
-            <Link href="/tutoriels/react-intro">
-              <button className="bg-(--color-primary) hover:bg-(--color-secondary) text-(--color-white-break) font-medium mt-4 px-5 py-2.5 rounded-lg transition-colors self-start text-sm">
-                Commencer Formation
-              </button>
-            </Link>
+    <main className="min-h-screen bg-[radial-gradient(circle_at_top,rgba(34,78,176,0.12),transparent_28%),linear-gradient(180deg,#f8fafc_0%,#eef4ff_100%)] px-4 py-12 text-slate-900 sm:px-6">
+      <section className="mx-auto max-w-6xl">
+        <div className="lg:items-center">
+          <div className="rounded-4xl border border-slate-200/80 bg-white/90 p-6 shadow-sm sm:p-8">
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-(--color-primary)">Tuto à la une</p>
+            {featuredPost ? (
+              <div className="mt-4 space-y-5">
+                <div className="rounded-3xl bg-[linear-gradient(135deg,rgba(34,78,176,0.14),rgba(231,119,188,0.14))] p-6">
+                  <p className="text-xs font-semibold uppercase tracking-[0.22em] text-slate-600">
+                    {getCategoryLabel(featuredPost)}
+                  </p>
+                  <h2 className="mt-3 text-2xl font-black text-slate-950">{featuredPost.title}</h2>
+                  <p className="mt-3 text-sm leading-7 text-slate-600">{featuredPost.description}</p>
+                </div>
+
+                <div className="flex items-center justify-between border-t border-slate-200 pt-4 text-xs text-slate-500">
+                  <span>
+                    Par <strong className="text-slate-700">{featuredPost.author.firstname} {featuredPost.author.name}</strong>
+                  </span>
+                  <span>{formatDate(featuredPost.createAt)}</span>
+                </div>
+
+                <Link
+                  href={`/tutoriels/${featuredPost.slug}`}
+                  className="inline-flex items-center justify-center rounded-full bg-(--color-primary) px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-(--color-primary)/20 transition-transform duration-200 hover:-translate-y-0.5 hover:brightness-110"
+                >
+                  Commencer la lecture
+                </Link>
+              </div>
+            ) : (
+              <div className="mt-4 rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-6 text-sm text-slate-600">
+                Aucun tutoriel publié pour le moment.
+              </div>
+            )}
           </div>
         </div>
       </section>
 
-      <section className="flex flex-col sm:flex-row gap-3 mb-8">
-        <div className="relative min-w-45">
-          <select value={sort} onChange={(e) => setSort(e.target.value as any)} className="w-full appearance-none bg-(--color-white-break) border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm text-slate-700 font-medium cursor-pointer focus:outline-none focus:border-blue-500">
-            <option value="none">{`Date d'ajout`}</option>
-            <option value="recent">Récemment ajoutés</option>
-            <option value="oldest">Les plus anciens</option>
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+      <section className="mx-auto mt-10 max-w-6xl rounded-4xl border border-slate-200/80 bg-white/90 p-6 shadow-sm sm:p-8">
+        <form method="get" className="grid gap-4 lg:grid-cols-[1.1fr_0.7fr_0.6fr_auto]">
+          <div className="relative">
+            <input
+              type="text"
+              name="q"
+              defaultValue={firstValue(searchParams?.q) ?? ""}
+              placeholder="Recherche de tutos..."
+              className="w-full rounded-2xl border border-slate-200 bg-(--color-white-break) px-4 py-3 text-sm text-slate-700 placeholder-slate-400 shadow-sm focus:border-(--color-primary) focus:outline-none"
+            />
           </div>
-        </div>
 
-        <div className="relative flex-1">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Recherche de tutos..."
-            className="w-full bg-(--color-white-break border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm placeholder-slate-400 focus:outline-none focus:border-blue-500"
-          />
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.603 10.601z" /></svg>
+          <div className="relative">
+            <select
+              name="sort"
+              defaultValue={sort}
+              className="w-full appearance-none rounded-2xl border border-slate-200 bg-(--color-white-break) px-4 py-3 text-sm font-medium text-slate-700 shadow-sm focus:border-(--color-primary) focus:outline-none"
+            >
+              <option value="recent">Les plus récents</option>
+              <option value="oldest">Les plus anciens</option>
+              <option value="none">Date d’ajout</option>
+            </select>
           </div>
-        </div>
 
-        <div className="relative min-w-45">
-          <select value={category} onChange={(e) => setCategory(e.target.value)} className="w-full appearance-none bg-(--color-white-break) border border-slate-200 rounded-lg pl-3 pr-10 py-2 text-sm text-slate-700 font-medium cursor-pointer focus:outline-none focus:border-blue-500">
-            {categories.map((c) => (
-              <option key={c} value={c}>{c === "all" ? "Toutes les catégories" : c}</option>
-            ))}
-          </select>
-          <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-500">
-            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" className="w-4 h-4"><path strokeLinecap="round" strokeLinejoin="round" d="M19.5 8.25l-7.5 7.5-7.5-7.5" /></svg>
+          <div className="relative">
+            <select
+              name="category"
+              defaultValue={category}
+              className="w-full appearance-none rounded-2xl border border-slate-200 bg-(--color-white-break) px-4 py-3 text-sm font-medium text-slate-700 shadow-sm focus:border-(--color-primary) focus:outline-none"
+            >
+              {categories.map((item) => (
+                <option key={item} value={item}>
+                  {item === "all" ? "Toutes les catégories" : item}
+                </option>
+              ))}
+            </select>
           </div>
-        </div>
+
+          <button
+            type="submit"
+            className="rounded-2xl bg-slate-950 px-6 py-3 text-sm font-semibold text-white transition-transform duration-200 hover:-translate-y-0.5"
+          >
+            Filtrer
+          </button>
+        </form>
       </section>
 
-      <section className="py-4">
-        <Text name="h2" className="text-2xl font-bold mb-4 text-slate-800">Tutoriels</Text>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          {filtered.length === 0 ? (
-            <div>Aucun tutoriel trouvé.</div>
+      <section className="mx-auto max-w-6xl py-10">
+        <div className="flex items-end justify-between gap-6">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-(--color-primary)">Catalogue</p>
+            <h2 className="mt-3 text-3xl font-black text-slate-950 sm:text-4xl">Tutoriels disponibles</h2>
+          </div>
+          <p className="text-sm text-slate-500">{filteredPosts.length} résultat(s)</p>
+        </div>
+
+        <div className="mt-8 grid grid-cols-1 gap-6 md:grid-cols-2">
+          {filteredPosts.length === 0 ? (
+            <div className="rounded-3xl border border-dashed border-slate-300 bg-slate-50 p-10 text-center text-slate-600 md:col-span-2">
+              Aucun tutoriel trouvé avec ces critères.
+            </div>
           ) : (
-            filtered.map((t) => (
-              <Link key={t.id} href={`/tutoriels/${t.id}`}>
-                <CardTuto name={t.category} title={t.title} description={t.description} />
+            filteredPosts.map((post) => (
+              <Link key={post.id} href={`/tutoriels/${post.slug}`} className="block transition-transform duration-200 hover:-translate-y-1">
+                <CardTuto
+                  name={getCategoryLabel(post)}
+                  title={post.title}
+                  description={post.description}
+                />
               </Link>
             ))
           )}

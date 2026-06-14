@@ -1,0 +1,53 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ttf_app
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL}
+      SESSION_SECRET: ${SESSION_SECRET}
+      NODE_ENV: production
+    depends_on:
+      - postgres_db
+    volumes:
+      - ttf_uploads:/app/public/uploads
+    networks:
+      - internal
+      - traefik_network
+    labels:
+      - "traefik.enable=true"
+      # ⚠️  Remplace ttf.ton-domaine.fr par ton vrai domaine
+      - "traefik.http.routers.ttf.rule=Host(`ttf.ton-domaine.fr`)"
+      - "traefik.http.routers.ttf.entrypoints=websecure"
+      - "traefik.http.routers.ttf.tls.certresolver=letsencrypt"
+      - "traefik.http.services.ttf.loadbalancer.server.port=3000"
+
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: ttf_postgres_container
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - internal
+    # Pas de port exposé publiquement en prod
+
+networks:
+  internal:
+    driver: bridge
+  traefik_network:
+    external: true
+    # ⚠️  Remplace par le vrai nom de ton réseau Traefik si différent
+    name: traefik_network
+
+volumes:
+  postgres_data:
+  ttf_uploads:

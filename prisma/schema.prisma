@@ -1,51 +1,59 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Get a free hosted Postgres database in seconds: `npx create-db`
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
 
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
-}
-
-generator client {
-  provider = "prisma-client-js"
 }
 
 model User {
-  id String @id @default(uuid())
-  email String @unique
-  firstname String
-  name String
-  password String
-  roleId Int
-  role Role @relation(fields: [roleId], references: [id])
-  posts Post[]
-  createAt DateTime @default(now())
+  id          String       @id @default(uuid())
+  email       String       @unique
+  firstname   String
+  name        String
+  password    String
+  roleId      Int
+  createAt    DateTime     @default(now())
+  posts       Post[]
+  role        Role         @relation(fields: [roleId], references: [id])
+  completions Completion[]
 }
 
 model Role {
-  id Int @id @default(autoincrement())
-  name String @unique
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  users User[]
 }
 
 model Post {
-  id Int @id @default(autoincrement())
-  title String
-  slug String @unique
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
   description String
-  imageUrl String?
-  content String
-  published Boolean @default(false)
-  createAt DateTime @default(now())
-  updated DateTime @default(now())
-  authorId String
-  author User @relation(fields: [authorId], references: [id], onDelete: Cascade)
-  tags Tag[]
+  imageUrl    String?
+  content     String
+  published   Boolean  @default(false)
+  createAt    DateTime @default(now())
+  updated     DateTime @default(now())
+  authorId    String
+  author      User     @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  tags        Tag[]        @relation("PostToTag")
+  completions Completion[]
+}
+
+model Completion {
+  userId      String
+  postId      Int
+  completedAt DateTime @default(now())
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+
+  @@id([userId, postId])
 }
 
 model Tag {
-  id Int @id @default(autoincrement())
-  name String @unique
-  posts Post[]
+  id    Int    @id @default(autoincrement())
+  name  String @unique
+  posts Post[] @relation("PostToTag")
 }

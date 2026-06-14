@@ -1,39 +1,71 @@
 "use client";
 
-import React, { createContext, useState, useContext, ReactNode } from "react";
+import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
 
-type User = {
+export type AuthUser = {
   id: string;
+  firstname?: string;
   name?: string;
+  email?: string;
+  role?: {
+    id: number;
+    name: string;
+  } | null;
 };
 
 type AuthContexteType = {
   isLog: boolean;
-  user: User | null;
-  Login: () => Promise<boolean>;
-  Logout: () => void;
+  isAdmin: boolean;
+  user: AuthUser | null;
+  Login: (email: string, password: string) => Promise<AuthUser | null>;
+  Logout: () => Promise<void>;
 };
 
 const AuthContexte = createContext<AuthContexteType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [isLog, setIsLog] = useState<boolean>(false);
-  const [user, setUser] = useState<User | null>(null);
+  const [isLog, setIsLog] = useState(false);
+  const [user, setUser] = useState<AuthUser | null>(null);
 
-  const Login = async (): Promise<boolean> => {
-    const demoUser: User = { id: "demo-user", name: "Demo User" };
-    setUser(demoUser);
+  useEffect(() => {
+    fetch("/api/auth/me")
+      .then(r => r.ok ? r.json() : null)
+      .then((data: AuthUser | null) => {
+        if (data?.id) {
+          setUser(data);
+          setIsLog(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
+  const Login = async (email: string, password: string): Promise<AuthUser | null> => {
+    const response = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password }),
+    });
+
+    if (!response.ok) {
+      return null;
+    }
+
+    const loggedUser = (await response.json()) as AuthUser;
+    setUser(loggedUser);
     setIsLog(true);
-    return true;
+    return loggedUser;
   };
 
-  const Logout = () => {
+  const Logout = async () => {
+    await fetch("/api/auth/logout", { method: "POST" });
     setUser(null);
     setIsLog(false);
   };
 
+  const isAdmin = (user?.role?.name ?? "").toLowerCase().includes("admin");
+
   return (
-    <AuthContexte.Provider value={{ isLog, user, Login, Logout }}>
+    <AuthContexte.Provider value={{ isLog, isAdmin, user, Login, Logout }}>
       {children}
     </AuthContexte.Provider>
   );

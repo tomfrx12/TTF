@@ -88,7 +88,7 @@ export default function MentionsLegales() {
                 <span className="font-semibold text-gray-700">Partage :</span> Aucune donnée personnelle n'est vendue, partagée, louée ou cédée à des entités tierces.
               </li>
               <li className="list-disc list-inside">
-                <span className="font-semibold text-gray-700">Vos Droits :</span> Tu disposes d'un droit d'accès, de rectification, de portabilité et de suppression définitive de tes données sur simple demande par email à l'adresse spécifiée à la section 1.
+                <span className="font-semibold text-gray-700">Vos Droits :</span> Vous disposez d'un droit d'accès, de rectification, de portabilité et de suppression définitive de vos données sur simple demande par email à l'adresse spécifiée à la section 1.
               </li>
             </ul>
           </section>
